@@ -3,8 +3,8 @@
 // Wraps specific games, handles Ad timers, and verifies DB game data
 
 if (!isset($_GET['game'])) {
-    echo "<h2 class='text-red-500 text-center text-2xl mt-10 font-black'>ERR: NO_GAME_SPECIFIED</h2>";
-    exit;
+    renderSystemError("Simulation Error", "No target simulation specified in the launch parameters.", "ERR_NO_TARGET");
+    return; // Stop execution of this file safely
 }
 
 $slug = htmlspecialchars($_GET['game']);
@@ -16,8 +16,8 @@ $stmt->execute(['slug' => $slug]);
 $gameInfo = $stmt->fetch();
 
 if (!$gameInfo) {
-    echo "<h2 class='text-neon-purple text-center text-2xl mt-10 font-mono'>ERR: SIMULATION_OFFLINE</h2>";
-    exit;
+    renderSystemError("Simulation Offline", "The requested protocol '{$slug}' is either deactivated or does not exist.", "ERR_DB_MISSING");
+    return;
 }
 
 $gameFile = 'games/' . $slug . '.php';
@@ -29,8 +29,8 @@ $gameFile = 'games/' . $slug . '.php';
     <div class="w-full md:w-3/4 glass-panel p-2 rounded-xl border-<?= $gameInfo['theme_color'] ?> relative overflow-hidden min-h-[600px]">
         
         <!-- Top Bar -->
-        <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center bg-black/50 border-b border-gray-800 z-20">
-            <h2 class="text-xl font-bold text-<?= $gameInfo['theme_color'] ?> flex items-center gap-2">
+        <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center bg-black/50 border-b border-gray-800 z-20 backdrop-blur-sm">
+            <h2 class="text-xl font-bold text-<?= $gameInfo['theme_color'] ?> flex items-center gap-2 drop-shadow-[0_0_5px_currentColor]">
                 <i data-lucide="<?= $gameInfo['icon'] ?>"></i> <?= $gameInfo['title'] ?>
             </h2>
             <div class="font-mono text-sm">
@@ -44,15 +44,16 @@ $gameFile = 'games/' . $slug . '.php';
                 if (file_exists($gameFile)) {
                     include_once $gameFile; 
                 } else {
-                    echo "<p class='text-gray-500 font-mono'>Game logic file missing.</p>";
+                    // Using our new function for missing physical files
+                    renderSystemError("File Missing", "The core logic module for '{$gameInfo['title']}' could not be located in the /games directory.", "FILE_NOT_FOUND");
                 }
             ?>
         </div>
 
         <!-- Ad Interstitial Overlay (Hidden by default) -->
-        <div id="ad-overlay" class="absolute inset-0 bg-black/95 z-50 hidden flex-col items-center justify-center">
+        <div id="ad-overlay" class="absolute inset-0 bg-black/95 z-50 hidden flex-col items-center justify-center pointer-events-auto">
             <h3 class="text-3xl font-black text-yellow-500 mb-4 animate-pulse">SPONSORED TRANSMISSION</h3>
-            <div class="w-80 h-64 bg-gray-900 border border-yellow-500 mb-4 flex items-center justify-center">
+            <div class="w-80 h-64 bg-gray-900 border border-yellow-500 mb-4 flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)]">
                 <span class="text-gray-500 font-mono">[ Adsterra / AppLovin Ad Unit ]</span>
             </div>
             <p id="ad-skip-text" class="text-white font-mono mb-4">Watching transmission... <span id="ad-skip-timer">5</span>s</p>
@@ -64,11 +65,11 @@ $gameFile = 'games/' . $slug . '.php';
     <div class="w-full md:w-1/4 flex flex-col gap-4">
         <div class="glass-panel p-4 rounded-xl border-gray-800">
             <h3 class="text-gray-400 text-xs font-mono mb-2">REWARD POOL</h3>
-            <p class="text-2xl font-black text-neon-cyan"><?= number_format($gameInfo['base_reward']) ?> <span class="text-sm">Coins</span></p>
+            <p class="text-2xl font-black text-neon-cyan drop-shadow-[0_0_5px_#00f0ff]"><?= number_format($gameInfo['base_reward']) ?> <span class="text-sm">Coins</span></p>
             <p class="text-xs text-gray-500 mt-2"><?= $gameInfo['description'] ?></p>
         </div>
         
-        <button onclick="window.location.href='<?= BASE_URL ?>'" class="glass-panel p-4 rounded-xl border-gray-800 text-center hover:bg-gray-800 transition flex items-center justify-center gap-2 text-red-400">
+        <button onclick="window.location.href='<?= BASE_URL ?>'" class="glass-panel p-4 rounded-xl border-gray-800 text-center hover:bg-gray-800 hover:border-red-500 transition flex items-center justify-center gap-2 text-red-400 font-mono">
             <i data-lucide="power"></i> Disconnect
         </button>
     </div>
@@ -78,25 +79,28 @@ $gameFile = 'games/' . $slug . '.php';
     // Global Ad Controller for Gameplay
     let adInterval = <?= AD_INTERVAL_SECONDS ?>;
     let currentTimer = adInterval;
-    let gameLoopActive = true; // Games should check this before moving
+    let gameLoopActive = true; 
 
+    // Only run ad loop if a game file actually loaded
+    <?php if (file_exists($gameFile)): ?>
     setInterval(() => {
         if(!gameLoopActive) return;
         currentTimer--;
-        document.getElementById('ad-timer-display').innerText = currentTimer + 's';
+        const timerDisplay = document.getElementById('ad-timer-display');
+        if(timerDisplay) timerDisplay.innerText = currentTimer + 's';
         
         if(currentTimer <= 0) {
             triggerAdInterstitial();
         }
     }, 1000);
+    <?php endif; ?>
 
     function triggerAdInterstitial() {
-        gameLoopActive = false; // Pause game logic
+        gameLoopActive = false; 
         document.getElementById('ad-overlay').classList.remove('hidden');
         document.getElementById('ad-close-btn').classList.add('hidden');
         document.getElementById('ad-skip-text').classList.remove('hidden');
         
-        // Call your Adsterra/Applovin API here
         console.log("Triggering Ad Network...");
 
         let skipTime = 5;

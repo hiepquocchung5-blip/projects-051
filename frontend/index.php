@@ -1,32 +1,39 @@
 <?php
-    // /frontend/index.php
-    // Main Front Controller
+// /frontend/index.php
+// Main Front Controller - v1.3
 
-    require_once '../config/globals.php';
-    require_once '../config/database.php';
+require_once '../config/globals.php';
+require_once '../config/database.php';
+require_once 'includes/functions.php'; 
 
-    // Simple Routing Logic
-    $route = isset($_GET['route']) ? $_GET['route'] : 'home';
+$route = isset($_GET['route']) ? $_GET['route'] : 'home';
 
-    // Include Header
-    include_once 'includes/header.php';
+include_once 'includes/header.php';
 
-    // Route matching
-    switch ($route) {
-        case 'home':
-            include_once 'pages/home.php';
-            break;
-        case 'play':
-            include_once 'pages/play.php';
-            break;
-        case 'leaderboard':
-            include_once 'pages/leaderboard.php';
-            break;
-        default:
-            echo "<div class='flex items-center justify-center h-full text-neon-cyan text-2xl font-black'>404 - SECTOR NOT FOUND</div>";
-            break;
-    }
+switch ($route) {
+    case 'home':
+        include_once 'pages/home.php';
+        break;
+    case 'play':
+        include_once 'pages/play.php';
+        break;
+    case 'leaderboard':
+        include_once 'pages/leaderboard.php';
+        break;
+    case 'profile':
+        include_once 'pages/profile.php';
+        break;
+    case 'settings':
+        include_once 'pages/settings.php';
+        break;
+    case 'auth':
+        include_once 'pages/auth.php';
+        break;
+    default:
+        renderSystemError("Sector Not Found", "The requested routing pathway does not exist in the mainframe.", "404_NOT_FOUND");
+        break;
+}
 
-    // Include Footer
-    include_once 'includes/footer.php';
-    ?>
+include_once 'components/withdraw_modal.php';
+include_once 'includes/footer.php';
+?>
