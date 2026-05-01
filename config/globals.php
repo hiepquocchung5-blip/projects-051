@@ -10,8 +10,8 @@ define('COIN_TO_MMK_RATE', 10000000); // 10M Urban Coins
 define('MMK_BASE_VALUE', 1000);       // = 1000 MMK
 
 // Base URLs (Adjust for production)
-define('BASE_URL', 'http://localhost/urbanix/frontend');
-define('API_URL', 'http://localhost/urbanix/api');
+define('BASE_URL', 'http://localhost:8010/');
+define('API_URL', 'http://localhost:8011/');
 
 // Ad Timers
 define('AD_INTERVAL_SECONDS', 60);
