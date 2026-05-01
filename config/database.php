@@ -6,7 +6,7 @@ class Database {
     private $host = "localhost";
     private $db_name = "urbanix_db";
     private $username = "root";
-    private $password = ""; // Local default
+    private $password = "Stephan2k03"; // Local default
     public $conn;
 
     public function getConnection() {

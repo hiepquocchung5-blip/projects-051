@@ -17,23 +17,37 @@ A high-performance, purely PHP/MySQL web gaming portal featuring a "Circuit Chao
 
 Directory Structure
 
+Project 051: Urbanix Gaming Portal
+
+Directory Structure (Updated)
+
 /urbanix
-├── /api                # REST API endpoints (JSON returns)
-│   └── wallet.php      # Handles coin additions securely
-├── /config             # Global configuration files
-│   ├── database.php    # PDO connection
-│   └── globals.php     # Constants and settings
-├── /frontend           # User-facing application
-│   ├── /components     # Reusable UI parts
-│   │   └── game_card.php
-│   ├── /includes       # Global layout files
+├── /api                      # REST API endpoints
+│   ├── auth.php              # Google Auth & Session management
+│   ├── wallet.php            # Coin transaction handler
+│   └── telegram_webhook.php  # Telegram Bot listener
+├── /config                   # Global configurations
+│   ├── database.php          
+│   └── globals.php           
+├── /cron                     # Server background tasks
+│   └── convert.php           # 5-hour Coin to MMK converter
+├── /frontend                 # User-facing application
+│   ├── /components           # Reusable UI (Modals, Cards)
+│   │   ├── game_card.php
+│   │   └── telegram_modal.php
+│   ├── /games                # Isolated Game Logic (JS/HTML)
+│   │   ├── tictactoe.php
+│   │   └── cybermole.php
+│   ├── /includes             # Layout files
 │   │   ├── header.php
 │   │   └── footer.php
-│   ├── /pages          # Route handlers
+│   ├── /pages                # Route handlers
 │   │   ├── home.php
 │   │   └── play.php
-│   └── index.php       # Main Front Controller / Router
-└── /admin              # CMS (To be implemented)
+│   └── index.php             # Main Router
+└── /database
+    └── urbanix_db.sql        # Schema
+
 
 
 Setup (Local Development)
