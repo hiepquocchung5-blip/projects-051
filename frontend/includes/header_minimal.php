@@ -30,6 +30,10 @@
         body { margin: 0; overflow: hidden; background-color: #0a0a0c; color: #e2e8f0; }
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.4; }
         .glass-panel { background: rgba(21, 21, 24, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+        
+        /* Captcha Specific Styles */
+        .captcha-box { filter: drop-shadow(0 0 10px rgba(212,175,55,0.2)); transition: all 0.3s ease; }
+        .captcha-box:hover { filter: drop-shadow(0 0 15px rgba(212,175,55,0.4)); }
     </style>
 </head>
 <body>
