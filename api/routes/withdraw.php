@@ -2,6 +2,11 @@
 // /api/routes/withdraw.php
 // Endpoint: /api/index.php?route=withdraw
 
+global $db, $method, $requestData;
+/** @var PDO $db */
+/** @var string $method */
+/** @var array $requestData */
+
 $authUser = JWT::validate();
 $userId = $authUser['id'];
 

@@ -1,14 +1,18 @@
 <?php
 // /api/routes/wallet.php
 // Endpoint: /api/index.php?route=wallet
-// Protected Wallet Controller
+
+global $db, $method, $requestData;
+/** @var PDO $db */
+/** @var string $method */
+/** @var array $requestData */
 
 $authUser = JWT::validate();
 $userId = $authUser['id'];
 
 if ($method === 'POST') {
     $amount = intval($requestData['amount'] ?? 0);
-    $action = $requestData['action'] ?? 'unknown';
+    $action = htmlspecialchars($requestData['action'] ?? 'unknown');
 
     if ($amount <= 0 || $amount > 100000) Response::error("Anomalous payload size.", 403);
 
@@ -28,7 +32,6 @@ if ($method === 'POST') {
 
         $db->commit();
         
-        // Fetch new balance to return
         $newBal = $db->prepare("SELECT urban_coins FROM users WHERE id = ?");
         $newBal->execute([$userId]);
         $currentCoins = $newBal->fetchColumn();
@@ -39,5 +42,7 @@ if ($method === 'POST') {
         if($db->inTransaction()) $db->rollBack();
         Response::error("Ledger fault: " . $e->getMessage(), 500);
     }
+} else {
+    Response::error("Method not allowed.", 405);
 }
 ?>

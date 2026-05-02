@@ -2,7 +2,11 @@
 // /api/routes/logout.php
 // Endpoint: /api/index.php?route=logout
 
-// Even if client purges JWT, we clear PHP sessions here for fallback safety
+global $method;
+/** @var string $method */
+
+if ($method !== 'POST') Response::error("Method not allowed.", 405);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
