@@ -1,8 +1,7 @@
 <?php
 // /frontend/pages/profile.php
-// Premium Mobile-First Profile
+// Premium Mobile-First Profile & Affiliate Network
 
-// Double check just in case, though the Router handles this now.
 requireAuth(); 
 
 $db = (new Database())->getConnection();
@@ -13,6 +12,9 @@ $user = $stmt->fetch();
 $transStmt = $db->prepare("SELECT * FROM transactions WHERE user_id = :id ORDER BY created_at DESC LIMIT 10");
 $transStmt->execute(['id' => $_SESSION['user_id']]);
 $transactions = $transStmt->fetchAll();
+
+// Generate Referral Link
+$refLink = (defined('BASE_URL') ? BASE_URL : '') . "?route=auth&ref=" . urlencode($user['username']);
 ?>
 
 <div class="mb-6 pb-4 border-b border-gray-800/50 flex items-center justify-between">
@@ -21,9 +23,11 @@ $transactions = $transStmt->fetchAll();
     </h2>
 </div>
 
-<div class="flex flex-col lg:flex-row gap-6 w-full">
+<div class="flex flex-col lg:flex-row gap-6 w-full pb-20">
     <div class="w-full lg:w-1/3 flex flex-col gap-6">
-        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group">
+        
+        <!-- Asset Card -->
+        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group shadow-2xl">
             <div class="absolute top-0 right-0 w-40 h-40 bg-premium-gold/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-premium-gold/10 transition-all"></div>
             
             <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-800/50">
@@ -53,14 +57,31 @@ $transactions = $transStmt->fetchAll();
                 </button>
             </div>
         </div>
+
+        <!-- Affiliate Network Card -->
+        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden shadow-2xl border-premium-gold/30">
+            <h3 class="text-premium-gold font-bold mb-4 uppercase tracking-widest text-sm flex items-center gap-2">
+                <i data-lucide="network" class="w-4 h-4"></i> Affiliate Protocol
+            </h3>
+            <p class="text-xs text-gray-400 mb-4 font-sans leading-relaxed">Recruit new operatives. Yield 50,000 Coins per successful integration.</p>
+            
+            <div class="bg-black/60 border border-gray-700 p-4 rounded-2xl relative shadow-inner mb-4 flex items-center justify-between gap-2">
+                <input type="text" id="ref-link" value="<?= $refLink ?>" readonly class="bg-transparent text-gray-300 font-mono text-[10px] w-full outline-none truncate">
+                <button onclick="copyReferral()" class="text-premium-gold hover:text-white transition-colors shrink-0 p-2 bg-gray-800 rounded-lg">
+                    <i data-lucide="copy" size="16"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
 
-    <div class="w-full lg:w-2/3 glass-panel p-6 rounded-3xl">
+    <!-- Telemetry Logs -->
+    <div class="w-full lg:w-2/3 glass-panel p-6 rounded-3xl shadow-2xl">
         <h3 class="text-lg font-bold text-white mb-6 uppercase tracking-widest border-b border-gray-800 pb-4 flex items-center gap-3">
             <i data-lucide="activity" class="text-gray-400"></i> Telemetry Logs
         </h3>
 
-        <div class="overflow-x-auto pb-4">
+        <div class="overflow-x-auto pb-4 custom-scrollbar">
             <table class="w-full text-left text-sm font-mono whitespace-nowrap min-w-[500px]">
                 <thead class="text-gray-500 border-b border-gray-800/50 bg-black/20">
                     <tr>
@@ -74,12 +95,8 @@ $transactions = $transStmt->fetchAll();
                         <?php foreach($transactions as $tx): ?>
                             <tr class="hover:bg-white/5 transition-colors group">
                                 <td class="p-4 text-xs text-gray-500"><?= date('M d, H:i', strtotime($tx['created_at'])) ?></td>
-                                <td class="p-4 text-xs uppercase text-gray-300 flex items-center gap-2 mt-1">
-                                    <?php 
-                                        if($tx['source'] == 'game_win') echo '<i data-lucide="gamepad-2" class="w-4 h-4 text-premium-gold"></i> SIMULATION WIN';
-                                        elseif($tx['source'] == 'ad_view') echo '<i data-lucide="monitor-play" class="w-4 h-4 text-gray-400"></i> SPONSOR AD';
-                                        else echo htmlspecialchars($tx['source']);
-                                    ?>
+                                <td class="p-4 text-[10px] uppercase text-gray-300 flex items-center gap-2 mt-1">
+                                    <span class="bg-gray-800 px-2 py-1 rounded border border-gray-700"><?= htmlspecialchars($tx['source']) ?></span>
                                 </td>
                                 <td class="p-4 text-right font-bold text-white group-hover:text-premium-gold transition-colors">+<?= number_format($tx['amount']) ?></td>
                             </tr>
@@ -92,3 +109,12 @@ $transactions = $transStmt->fetchAll();
         </div>
     </div>
 </div>
+
+<script>
+    function copyReferral() {
+        const link = document.getElementById('ref-link');
+        link.select();
+        document.execCommand('copy');
+        if(window.showToast) window.showToast('Affiliate Link Copied', 'success');
+    }
+</script>
