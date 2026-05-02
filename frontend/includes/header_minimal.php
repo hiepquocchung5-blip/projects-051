@@ -1,6 +1,6 @@
 <?php
 // /frontend/includes/header_minimal.php
-// Clean header for Auth pages without nav
+// Clean header for Auth pages - Injects ENV variables securely
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,19 +11,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        premium: {
-                            dark: '#0a0a0c', panel: '#151518', metal: '#2d2d35', silver: '#e2e8f0', gold: '#d4af37', goldDark: '#aa8c2c'
-                        }
-                    }
-                }
-            }
-        }
+        // CRITICAL: Tell Javascript exactly where the API Gateway is
+        window.URBANIX_CONFIG = {
+            googleClientId: "<?= $_ENV['GOOGLE_CLIENT_ID'] ?? '' ?>",
+            apiUrl: "<?= defined('API_URL') ? API_URL : '' ?>"
+        };
+        
+        tailwind.config = { theme: { extend: { colors: { premium: { dark: '#0a0a0c', panel: '#151518', silver: '#e2e8f0', gold: '#d4af37', goldDark: '#aa8c2c' } } } } }
     </script>
+
+    <script src="<?= defined('BASE_URL') ? BASE_URL : '' ?>/js/api_client.js"></script>
+
     <style>
         body { margin: 0; overflow: hidden; background-color: #0a0a0c; color: #e2e8f0; }
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.4; }
@@ -32,4 +34,4 @@
 </head>
 <body>
 <div id="canvas-container"></div>
-<div id="ui-layer" class="absolute inset-0 z-10 overflow-y-auto pointer-events-auto">
+<div id="ui-layer" class="absolute inset-0 z-10 overflow-y-auto pointer-events-auto flex items-center justify-center">
