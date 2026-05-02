@@ -1,33 +1,40 @@
 <?php
 // /config/database.php
-// Secure PDO Database Connection - Production Ready
+// Secure PDO Connection - Strict .ENV Enforcement
 
 class Database {
-    private $host = "localhost";
-    private $db_name = "urbanix_db";
-    private $username = "root";
-    private $password = "Stephan2k03"; // Change for production
     public $conn;
 
     public function getConnection() {
         $this->conn = null;
+        
+        // Failsafe: If ENV isn't loaded yet, load it directly.
+        if (!isset($_ENV['DB_HOST'])) {
+            require_once __DIR__ . '/env_parser.php';
+            EnvParser::load(__DIR__ . '/../.env');
+        }
+
+        $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+        $db_name = $_ENV['DB_NAME'] ?? 'urbanix_db';
+        $username = $_ENV['DB_USER'] ?? 'root';
+        $password = $_ENV['DB_PASS'] ?? '';
+
         try {
-            // DSN string
-            $dsn = "mysql:host=" . $this->host . ";dbname=" . $this->db_name . ";charset=utf8mb4";
-            
-            // Options for secure, high-performance querying
+            $dsn = "mysql:host=" . $host . ";dbname=" . $db_name . ";charset=utf8mb4";
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false, // Real prepared statements
+                PDO::ATTR_EMULATE_PREPARES   => false,
             ];
 
-            $this->conn = new PDO($dsn, $this->username, $this->password, $options);
+            $this->conn = new PDO($dsn, $username, $password, $options);
             
         } catch(PDOException $exception) {
-            // In production, log this to a file instead of echoing to prevent credential leakage
-            error_log("Database Connection Error: " . $exception->getMessage());
-            die("<div style='background:#0a0a0f;color:#ef4444;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;'>CRITICAL_SYSTEM_FAILURE: DB_UNREACHABLE</div>");
+            error_log("CRITICAL DB FAULT: " . $exception->getMessage());
+            die("<div style='background:#0a0a0c;color:#d4af37;height:100vh;display:flex;align-items:center;justify-content:center;font-family:monospace;flex-direction:column;'>
+                    <h1 style='font-size:2rem;margin-bottom:10px;'>[SYSTEM_HALTED]</h1>
+                    <p>Database Uplink Failure. Verify .env credentials.</p>
+                 </div>");
         }
         return $this->conn;
     }
