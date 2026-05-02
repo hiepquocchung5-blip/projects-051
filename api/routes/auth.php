@@ -18,7 +18,7 @@ if (!$action || !$email || empty($password)) {
 }
 
 if ($action === 'login') {
-    $stmt = $db->prepare("SELECT id, username, password_hash, auth_provider, role, urban_coins FROM users WHERE email = :email LIMIT 1");
+    $stmt = $db->prepare("SELECT id, username, password_hash, auth_provider, role, urban_coins, mmk_balance FROM users WHERE email = :email LIMIT 1");
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch();
 
@@ -27,6 +27,14 @@ if ($action === 'login') {
 
     if (password_verify($password, $user['password_hash'])) {
         $db->prepare("UPDATE users SET last_login = NOW() WHERE id = :id")->execute(['id' => $user['id']]);
+        
+        // CRITICAL FIX: Re-sync PHP Session for the frontend HTML router
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['urban_coins'] = $user['urban_coins'];
+        $_SESSION['mmk_balance'] = $user['mmk_balance'];
+
         $token = JWT::encode(['id' => $user['id'], 'username' => $user['username'], 'role' => $user['role']]);
 
         Response::success("Authentication verified.", [
@@ -68,6 +76,14 @@ elseif ($action === 'register') {
     }
 
     $db->commit();
+    
+    // CRITICAL FIX: Re-sync PHP Session for the frontend HTML router
+    $_SESSION['user_id'] = $user_id;
+    $_SESSION['username'] = $username;
+    $_SESSION['role'] = 'player';
+    $_SESSION['urban_coins'] = 0;
+    $_SESSION['mmk_balance'] = 0;
+
     $token = JWT::encode(['id' => $user_id, 'username' => $username, 'role' => 'player']);
 
     Response::success("Registration successful.", ["token" => $token]);
