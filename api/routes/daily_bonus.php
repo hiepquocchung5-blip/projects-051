@@ -2,6 +2,11 @@
 // /api/routes/daily_bonus.php
 // Endpoint: /api/index.php?route=daily_bonus
 
+global $db, $method, $requestData;
+/** @var PDO $db */
+/** @var string $method */
+/** @var array $requestData */
+
 $authUser = JWT::validate();
 $userId = $authUser['id'];
 
