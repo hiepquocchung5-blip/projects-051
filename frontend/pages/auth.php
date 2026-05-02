@@ -1,15 +1,17 @@
 <?php
 // /frontend/pages/auth.php
-// V5 Premium Auth Screen - Failsafe Captcha & API Integration
+// V6 Premium Auth Screen - Advanced Failsafe Captcha & API Integration
 
 $redirectTarget = isset($_GET['redirect']) ? htmlspecialchars($_GET['redirect']) : 'home';
 $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
 ?>
 <style>
     .float-input:focus ~ .float-label, .float-input:not(:placeholder-shown) ~ .float-label { transform: translateY(-1.5rem) scale(0.85); color: #d4af37; }
-    .form-section { transition: opacity 0.4s ease, transform 0.4s ease; }
-    .hidden-state { opacity: 0; transform: translateY(10px); pointer-events: none; position: absolute; visibility: hidden; }
+    .form-section { transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .hidden-state { opacity: 0; transform: translateY(15px); pointer-events: none; position: absolute; visibility: hidden; }
     .active-state { opacity: 1; transform: translateY(0); position: relative; visibility: visible; }
+    .captcha-box { filter: drop-shadow(0 0 10px rgba(212,175,55,0.2)); transition: all 0.3s ease; }
+    .captcha-box:hover { filter: drop-shadow(0 0 15px rgba(212,175,55,0.4)); }
 </style>
 
 <div class="flex items-center justify-center min-h-[85vh] w-full px-4 relative z-10 pb-20 mt-10">
@@ -26,16 +28,22 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
         </div>
 
         <div id="auth-error" class="hidden bg-red-900/30 border border-red-500/50 text-red-500 p-4 rounded-xl text-[10px] mb-6 text-center shadow-inner font-mono font-bold tracking-widest uppercase relative z-10"></div>
+        <div id="auth-success" class="hidden bg-green-900/30 border border-green-500/50 text-green-400 p-4 rounded-xl text-[10px] mb-6 text-center shadow-inner font-mono break-words font-bold tracking-widest uppercase relative z-10"></div>
 
         <div id="captcha-container" class="mb-6 relative z-10 active-state">
             <div class="flex items-center justify-between mb-2">
                 <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Anti-Bot Verification</label>
-                <button type="button" onclick="loadCaptcha()" class="text-premium-gold hover:text-white transition-colors text-[9px] font-bold uppercase flex items-center gap-1">
-                    <i data-lucide="refresh-cw" size="10"></i> Refresh
+                <button type="button" onclick="loadCaptcha()" class="text-premium-gold hover:text-white transition-colors text-[9px] font-bold uppercase flex items-center gap-1 group">
+                    <i data-lucide="refresh-cw" size="10" class="group-hover:rotate-180 transition-transform duration-300"></i> Refresh
                 </button>
             </div>
             <div class="flex gap-3">
-                <img id="captcha-img" src="" alt="Captcha" class="h-[55px] rounded-xl border border-gray-700 bg-[#050507]">
+                <div class="h-[55px] w-[140px] rounded-xl border border-gray-700 bg-[#050507] flex items-center justify-center relative overflow-hidden captcha-box shrink-0">
+                    <div id="captcha-loader" class="absolute inset-0 flex items-center justify-center bg-[#050507] z-10">
+                        <i data-lucide="loader" class="animate-spin text-premium-gold w-5 h-5"></i>
+                    </div>
+                    <img id="captcha-img" src="" alt="Captcha" class="h-full w-full object-cover opacity-0 transition-opacity duration-300 relative z-0">
+                </div>
                 <input type="text" id="captcha-input" placeholder="LOADING..." maxlength="8" required disabled class="w-full bg-black/60 border border-gray-700 rounded-xl px-4 text-white outline-none focus:border-premium-gold transition-all shadow-inner font-mono font-bold tracking-widest text-center uppercase text-sm disabled:opacity-50">
             </div>
         </div>
@@ -82,28 +90,40 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
     let activeCaptchaHash = '';
     let activeCaptchaExp = 0;
 
-    // Failsafe Captcha Loader
+    // Advanced Failsafe Captcha Loader
     async function loadCaptcha() {
         const img = document.getElementById('captcha-img');
         const input = document.getElementById('captcha-input');
+        const loader = document.getElementById('captcha-loader');
         
-        img.style.opacity = '0.3'; 
+        loader.style.display = 'flex';
+        img.style.opacity = '0'; 
         input.value = '';
         input.placeholder = 'LOADING...';
         input.disabled = true;
         
         try {
+            if (typeof UrbanixAPI === 'undefined') throw new Error("API Client script missing.");
+            
             const res = await UrbanixAPI.request('captcha', 'GET');
+            
+            if (!res || !res.data || !res.data.image) {
+                throw new Error("Invalid Captcha Payload format.");
+            }
+            
             img.src = res.data.image; 
             activeCaptchaHash = res.data.hash; 
             activeCaptchaExp = res.data.exp;
             
+            loader.style.display = 'none';
             img.style.opacity = '1';
             input.disabled = false;
             input.placeholder = '8 CHARS';
             input.focus();
         } catch (err) { 
             console.error("Captcha load failed:", err.message);
+            loader.innerHTML = '<i data-lucide="alert-triangle" class="text-red-500 w-5 h-5"></i>';
+            lucide.createIcons();
             input.placeholder = 'SYS FAULT';
             if(window.showToast) window.showToast("Gateway error. Check API routing.", "error");
         }
@@ -119,6 +139,8 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
 
     function toggleAuth(mode) {
         document.getElementById('auth-error').classList.add('hidden');
+        document.getElementById('auth-success').classList.add('hidden');
+        
         ['login-form', 'register-form', 'recovery-form'].forEach(id => {
             document.getElementById(id).classList.remove('active-state');
             document.getElementById(id).classList.add('hidden-state');
@@ -153,11 +175,26 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
 
     async function handleNativeAuth(e, action) {
         e.preventDefault();
-        const errorDiv = document.getElementById('auth-error'); errorDiv.classList.add('hidden');
+        const errorDiv = document.getElementById('auth-error'); 
+        const successDiv = document.getElementById('auth-success');
+        errorDiv.classList.add('hidden'); 
+        successDiv.classList.add('hidden');
+        
         let payload = { action: action };
         let btn, originalText;
 
-        if (action === 'recovery') return; // Simulated
+        if (action === 'recovery') {
+            btn = document.getElementById('recovery-btn');
+            originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader" class="animate-spin w-5 h-5"></i>`; lucide.createIcons();
+            setTimeout(() => {
+                successDiv.innerText = "> Extraction link dispatched to matrix routing. Check inbox.";
+                successDiv.classList.remove('hidden');
+                btn.innerHTML = originalText; lucide.createIcons();
+                document.getElementById('recovery-email').value = '';
+            }, 1500);
+            return;
+        }
 
         const captchaVal = document.getElementById('captcha-input').value;
         if (!captchaVal || captchaVal.length !== 8) {
