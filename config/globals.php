@@ -1,28 +1,49 @@
 <?php
 // /config/globals.php
-// FIXED: Dynamic Host Detection & Session Integrity
+// Production Setup: .ENV Integration & Subdomain Session Sharing
 
-// Secure session cookie settings before starting session
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_only_cookies', 1);
+// 1. Load Environment Variables
+require_once __DIR__ . '/env_parser.php';
+EnvParser::load(__DIR__ . '/../.env');
+
+$env = $_ENV['APP_ENV'] ?? 'development';
+$protocol = $_ENV['APP_PROTOCOL'] ?? 'http://';
+$baseDomain = $_ENV['APP_DOMAIN'] ?? 'localhost';
+
+// 2. Subdomain Session Sharing (Only apply domain parameter in production)
+$cookieParams = session_get_cookie_params();
+$sessionConfig = [
+    'lifetime' => $cookieParams["lifetime"],
+    'path' => '/',
+    'secure' => $protocol === 'https://', 
+    'httponly' => true,
+    'samesite' => 'Lax'
+];
+
+// Add leading dot for subdomain sharing if in production
+if ($env === 'production') {
+    $sessionConfig['domain'] = '.' . $baseDomain;
+}
+
+session_set_cookie_params($sessionConfig);
 session_start();
 
-// Dynamically detect the current host and port (e.g., localhost:8010)
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-$host = $_SERVER['HTTP_HOST']; 
-
-// Assuming your structure is accessed via http://localhost:8010/frontend/
-// If you run your server directly INSIDE the frontend folder, change this accordingly.
-$basePath = '/frontend'; 
-$apiPath = '/api';
-
+// 3. Dynamic URLs based on .env
 define('APP_NAME', 'URBANIX');
-define('APP_VERSION', '2.0.0');
+define('APP_VERSION', '2.2.0');
 
-define('BASE_URL', $protocol . $host . $basePath);
-define('API_URL', $protocol . $host . $apiPath);
+if ($env === 'production') {
+    define('BASE_URL', $protocol . $baseDomain);
+    define('API_URL', $protocol . 'api.' . $baseDomain);
+    define('ADMIN_URL', $protocol . 'admin.' . $baseDomain);
+} else {
+    // Localhost fallback structure
+    define('BASE_URL', $protocol . $baseDomain . '/frontend');
+    define('API_URL', $protocol . $baseDomain . '/api');
+    define('ADMIN_URL', $protocol . $baseDomain . '/admin');
+}
 
-// Economy Constants
+// 4. Economy Constants
 define('COIN_TO_MMK_RATE', 10000000); 
 define('MMK_BASE_VALUE', 1000);       
 define('AD_INTERVAL_SECONDS', 60);

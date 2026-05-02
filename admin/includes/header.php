@@ -30,18 +30,24 @@
             <h1 class="text-lg font-bold text-white tracking-widest uppercase">Overseer</h1>
         </div>
         
-        <nav class="flex-grow p-4 space-y-1 text-sm font-medium">
-            <a href="?route=dashboard" class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 text-white hover:bg-gray-800 transition-colors">
-                <i data-lucide="layout-grid" size="18" class="text-exec-gold"></i> Dashboard
+       <nav class="flex-grow p-4 space-y-1 text-sm font-medium">
+            <a href="?route=dashboard" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
+                <i data-lucide="layout-grid" size="18"></i> Dashboard
             </a>
             <a href="?route=games" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
                 <i data-lucide="gamepad-2" size="18"></i> Modules
             </a>
-            <a href="#" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
+            <a href="?route=events" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
+                <i data-lucide="zap" size="18"></i> Global Events
+            </a>
+            <a href="?route=operatives" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
                 <i data-lucide="users" size="18"></i> Operatives
             </a>
-            <a href="#" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
+            <a href="?route=ledger" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
                 <i data-lucide="file-spreadsheet" size="18"></i> Ledger
+            </a>
+            <a href="?route=system" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/30 transition-colors">
+                <i data-lucide="settings-2" size="18"></i> System Config
             </a>
         </nav>
         

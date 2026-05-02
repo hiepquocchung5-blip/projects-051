@@ -1,32 +1,13 @@
--- phpMyAdmin SQL Dump
--- Project 051: Urbanix Gaming Portal
--- Generation Time: System Initial Setup
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `urbanix_db`
---
-CREATE DATABASE IF NOT EXISTS `urbanix_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `urbanix_db`;
-
--- --------------------------------------------------------
-
 --
 -- Table structure for table `users`
 --
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `google_id` varchar(255) NOT NULL UNIQUE,
+  `google_id` varchar(255) DEFAULT NULL UNIQUE,
   `username` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL UNIQUE,
+  `password_hash` varchar(255) DEFAULT NULL,
+  `auth_provider` enum('google','native') NOT NULL DEFAULT 'google',
   `urban_coins` bigint(20) NOT NULL DEFAULT 0,
   `mmk_balance` decimal(10,2) NOT NULL DEFAULT 0.00,
   `telegram_chat_id` varchar(100) DEFAULT NULL,
@@ -47,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `games` (
   `title` varchar(100) NOT NULL,
   `description` text NOT NULL,
   `icon` varchar(50) NOT NULL DEFAULT 'gamepad-2',
-  `theme_color` varchar(50) NOT NULL DEFAULT 'neon-cyan',
+  `theme_color` varchar(50) NOT NULL DEFAULT 'premium-gold',
   `base_reward` int(11) NOT NULL DEFAULT 1000,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -55,25 +36,29 @@ CREATE TABLE IF NOT EXISTS `games` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `games`
+-- Dumping initial data for table `games` (All 8 Modules)
 --
 INSERT INTO `games` (`slug`, `title`, `description`, `icon`, `theme_color`, `base_reward`, `is_active`) VALUES
-('tictactoe', 'Quantum Tic-Tac-Toe', 'Play against rogue AI. Earn coins per win.', 'grid-3x3', 'neon-cyan', 5000, 1),
-('cybermole', 'Cyber-Mole', 'Timed clicking simulation. High risk, high reward.', 'target', 'neon-purple', 2500, 1),
-('urbanbird', 'Urbanix Bird', 'Dodge the firewall pillars. Infinite runner.', 'bird', 'green-400', 1000, 1);
+('tictactoe', 'Quantum Tic-Tac', 'Logic combat against system AI.', 'grid-3x3', 'premium-gold', 5000, 1),
+('cybermole', 'Target Neutralization', 'High-speed kinetic clicking protocol.', 'target', 'gray-300', 2500, 1),
+('urbanbird', 'Urban Flight', 'Navigate the firewall. Infinite evasion.', 'plane-takeoff', 'premium-silver', 1000, 1),
+('neonguess', 'Encryption Breach', 'Decrypt the target node. Fewer attempts yield higher payouts.', 'terminal', 'premium-goldDark', 5000, 1),
+('gridwars', 'Grid Wars Lite', 'Arena survival combat. Neutralize rogue drone swarms.', 'crosshair', 'red-500', 0, 1),
+('cyberjump', 'Cyber Jump', 'Platform traversal simulation. Avoid data spikes.', 'activity', 'premium-gold', 3000, 1),
+('dataworm', 'Data Worm', 'Consume packets to expand your physical node length.', 'git-commit', 'premium-silver', 2000, 1),
+('nodematch', 'Node Match', 'Memory decryption. Find the matching cryptographic pairs.', 'cpu', 'premium-goldDark', 4000, 1);
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `transactions`
--- Tracks every coin addition (ads, game wins) to prevent cheating
 --
 CREATE TABLE IF NOT EXISTS `transactions` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `amount` int(11) NOT NULL,
-  `source` enum('game_win', 'ad_view', 'daily_login', 'referral', 'admin_bonus') NOT NULL,
-  `reference_id` varchar(100) DEFAULT NULL COMMENT 'Game slug or Ad network ID',
+  `source` enum('game_win', 'ad_view', 'daily_login', 'referral', 'admin_bonus', 'unknown') NOT NULL,
+  `reference_id` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
@@ -102,7 +87,6 @@ CREATE TABLE IF NOT EXISTS `withdrawals` (
 
 --
 -- Table structure for table `events`
--- Controls Global Multipliers via CMS
 --
 CREATE TABLE IF NOT EXISTS `events` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -116,10 +100,10 @@ CREATE TABLE IF NOT EXISTS `events` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `events`
+-- Dumping initial data for table `events`
 --
 INSERT INTO `events` (`title`, `coin_multiplier`, `start_time`, `end_time`, `is_active`) VALUES
-('Weekend Neon Overdrive', 2.0, '2026-05-02 00:00:00', '2026-05-04 23:59:59', 0);
+('Global Network Initialization', 1.5, '2026-05-01 00:00:00', '2026-05-31 23:59:59', 1);
 
 -- --------------------------------------------------------
 
@@ -133,7 +117,7 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `system_settings`
+-- Dumping initial data for table `system_settings`
 --
 INSERT INTO `system_settings` (`setting_key`, `setting_value`) VALUES
 ('coin_to_mmk_rate', '10000000'),
