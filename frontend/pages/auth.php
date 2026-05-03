@@ -1,6 +1,6 @@
 <?php
 // /frontend/pages/auth.php
-// V8 Premium Auth Screen - Case-Insensitive Captcha & Fluid UX
+// V9 Premium Auth Screen - True Case-Insensitive Captcha & Fluid UX
 
 $redirectTarget = isset($_GET['redirect']) ? htmlspecialchars($_GET['redirect']) : 'home';
 $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
@@ -40,7 +40,7 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
             <div id="captcha-container" class="mb-6 relative z-10 active-state">
                 <div class="flex items-center justify-between mb-2">
                     <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                        <i data-lucide="shield-alert" size="12" class="text-gray-500"></i> Anti-Bot Verification
+                        <i data-lucide="shield-alert" size="12" class="text-gray-500"></i> Anti-Bot Verification <span class="text-[8px] text-gray-500 normal-case tracking-normal">(Case-insensitive)</span>
                     </label>
                     <button type="button" onclick="loadCaptcha()" class="text-premium-gold hover:text-white transition-colors text-[9px] font-bold uppercase flex items-center gap-1 group">
                         <i data-lucide="refresh-cw" size="10" class="group-hover:rotate-180 transition-transform duration-500"></i> Refresh
@@ -53,8 +53,8 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
                         </div>
                         <img id="captcha-img" src="" alt="Captcha" class="h-full w-full object-cover opacity-0 transition-opacity duration-500 relative z-0 group-hover:scale-105">
                     </div>
-                    <!-- FIXED: Removed JS oninput uppercase override to fix mobile keyboards. CSS handles the visual uppercase. -->
-                    <input type="text" id="captcha-input" placeholder="LOADING..." maxlength="8" required disabled class="w-full bg-black/60 border border-gray-700 rounded-xl px-4 text-white outline-none focus:border-premium-gold hover:border-gray-500 transition-all shadow-inner font-mono font-bold tracking-[0.2em] text-center uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed placeholder:tracking-widest">
+                    <!-- FIXED: Removed `uppercase` CSS class to allow natural typing on mobile keyboards. -->
+                    <input type="text" id="captcha-input" placeholder="Loading..." maxlength="8" required disabled autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full bg-black/60 border border-gray-700 rounded-xl px-4 text-white outline-none focus:border-premium-gold hover:border-gray-500 transition-all shadow-inner font-mono font-bold tracking-[0.2em] text-center text-sm disabled:opacity-50 disabled:cursor-not-allowed placeholder:tracking-widest">
                 </div>
             </div>
 
@@ -143,7 +143,7 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
     let activeCaptchaHash = '';
     let activeCaptchaExp = 0;
 
-    // Advanced Failsafe Captcha Loader with Artificial Smoothing
+    // Advanced Failsafe Captcha Loader
     async function loadCaptcha() {
         const img = document.getElementById('captcha-img');
         const input = document.getElementById('captcha-input');
@@ -152,7 +152,7 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
         loader.style.opacity = '1';
         img.style.opacity = '0'; 
         input.value = '';
-        input.placeholder = 'SYNCING...';
+        input.placeholder = 'Syncing...';
         input.disabled = true;
         
         try {
@@ -172,13 +172,13 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
             loader.style.opacity = '0';
             img.style.opacity = '1';
             input.disabled = false;
-            input.placeholder = '8 CHARS';
+            input.placeholder = '8 Chars';
             
         } catch (err) { 
             console.error("Captcha load failed:", err.message);
             loader.innerHTML = '<i data-lucide="wifi-off" class="text-red-500 w-6 h-6 animate-pulse"></i>';
             lucide.createIcons();
-            input.placeholder = 'SYS FAULT';
+            input.placeholder = 'Sys Fault';
             if(window.showToast) window.showToast("Gateway error. Verifying secure connection.", "error");
         }
     }
@@ -299,6 +299,7 @@ $referralCode = isset($_GET['ref']) ? htmlspecialchars($_GET['ref']) : '';
             return;
         }
 
+        // Send exactly what the user typed (backend handles the case-insensitive validation)
         payload.captcha = captchaVal; 
         payload.captcha_hash = activeCaptchaHash; 
         payload.captcha_exp = activeCaptchaExp;
